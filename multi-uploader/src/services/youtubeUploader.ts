@@ -12,6 +12,7 @@ export interface YouTubeUploadOptions {
   isShort?: boolean;
   scheduledPublishTime?: Date;
   account?: string; // YouTube account (A, B, C, D, E, F)
+  madeForKids?: boolean; // Flag content as "Made for Kids"
 }
 
 export class YouTubeUploader {
@@ -74,6 +75,7 @@ export class YouTubeUploader {
         },
         status: {
           privacyStatus: uploadParams.privacyStatus,
+          madeForKids: uploadParams.madeForKids,
         },
       };
 
@@ -166,8 +168,9 @@ export class YouTubeUploader {
       description: options.description || this.credentials.video.defaultDescription,
       tags: options.tags || this.credentials.video.defaultTags.split(','),
       categoryId: options.categoryId || '22', // People & Blogs
-      privacyStatus: options.privacyStatus || 'private',
+      privacyStatus: options.privacyStatus || 'public',
       isShort: options.isShort !== false, // Default to true for Shorts
+      madeForKids: options.madeForKids || false, // Default to false
     };
   }
 
@@ -199,8 +202,8 @@ export class YouTubeUploader {
   }
 
   /**
-   * Schedule a video upload (uploads as private, then schedules publication)
-   * Note: YouTube API doesn't support native scheduling, so this uploads as private
+   * Schedule a video upload (uploads as unlisted, then schedules publication)
+   * Note: YouTube API doesn't support native scheduling, so this uploads as unlisted
    * and you'll need to use external scheduling to publish later
    */
   async scheduleVideo(
@@ -214,15 +217,15 @@ export class YouTubeUploader {
         console.log(`Using YouTube account: ${options.account}`);
       }
 
-      // Upload as private first
+      // Upload as unlisted first for scheduling
       const uploadOptions = {
         ...options,
-        privacyStatus: 'private' as const,
+        privacyStatus: 'unlisted' as const,
       };
 
       const uploadResult = await this.uploadVideo(videoPath, uploadOptions);
 
-      console.log(`✅ Video uploaded as private for scheduling`);
+      console.log(`✅ Video uploaded as unlisted for scheduling`);
       console.log(`Video ID: ${uploadResult.videoId}`);
       console.log(`Scheduled to publish: ${scheduledPublishTime.toISOString()}`);
       console.log(`⚠️  Note: You'll need to manually publish this video at the scheduled time`);
@@ -259,6 +262,31 @@ export class YouTubeUploader {
       return true;
     } catch (error) {
       console.error(`Failed to update video privacy:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update video "Made for Kids" status
+   */
+  async updateMadeForKids(videoId: string, madeForKids: boolean): Promise<boolean> {
+    try {
+      console.log(`Updating video ${videoId} "Made for Kids" status to: ${madeForKids}`);
+
+      await this.youtube.videos.update({
+        part: ['status'],
+        requestBody: {
+          id: videoId,
+          status: {
+            madeForKids,
+          },
+        },
+      });
+
+      console.log(`✅ Video "Made for Kids" status updated to ${madeForKids}`);
+      return true;
+    } catch (error) {
+      console.error(`Failed to update "Made for Kids" status:`, error);
       throw error;
     }
   }

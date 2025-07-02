@@ -203,6 +203,10 @@ npm run dev -- --video ./videos/reel1.mp4 \
   --description "Check this out!" \
   --tags "shorts,viral,funny"
 
+# Upload as "Made for Kids" content
+npm run dev -- --video ./videos/reel1.mp4 \
+  --made-for-kids
+
 # Schedule upload
 npm run dev -- --video ./videos/reel1.mp4 \
   --schedule "2024-01-15T10:30:00"
@@ -227,6 +231,7 @@ npm run dev -- --video ./videos/reel1.mp4 \
 - **Scheduling**: Set upload times
 - **Real-time Status**: Live progress tracking
 - **Preview**: Review settings before upload
+- **Auto-Metadata**: Automatically fills title, description, and hashtags from Instagram metadata
 
 ## 📊 Supported Platforms
 
@@ -241,9 +246,12 @@ npm run dev -- --video ./videos/reel1.mp4 \
 
 - ✅ YouTube Shorts
 - ✅ Multiple accounts (A-F)
-- ✅ Scheduling (uploads as private)
+- ✅ Scheduling (uploads as unlisted)
 - ✅ Custom metadata
 - ✅ Batch uploads
+- ✅ Public uploads by default
+- ✅ "Made for Kids" content flagging
+- ✅ Auto-populate from Instagram metadata
 
 ## 🔧 Technical Requirements
 
@@ -327,6 +335,7 @@ reposter/
    - Check video format (MP4 recommended)
    - Verify file size < 256MB
    - Ensure account has upload permissions
+   - Videos are now uploaded as public by default
 
 3. **Web interface not loading**
    - Check port 3000 is available

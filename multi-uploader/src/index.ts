@@ -13,6 +13,7 @@ interface UploadOptions {
   description?: string;
   tags?: string[];
   privacyStatus?: 'private' | 'unlisted' | 'public';
+  madeForKids?: boolean;
   dryRun?: boolean;
   scheduledTime?: Date;
 }
@@ -109,6 +110,7 @@ class MultiUploader {
       description: options.description,
       tags: options.tags,
       privacyStatus: options.privacyStatus,
+      madeForKids: options.madeForKids,
     };
 
     switch (platform) {
@@ -190,6 +192,7 @@ Options:
   --description <desc>     Video description
   --tags <tags>            Comma-separated list of tags
   --privacy <status>       Privacy status (private,unlisted,public)
+  --made-for-kids         Flag content as "Made for Kids"
   --schedule <datetime>    Schedule upload for specific date/time (ISO format: 2024-01-15T10:30:00)
   --dry-run               Show what would be uploaded without actually uploading
   --info                  Show platform connection information
@@ -265,6 +268,11 @@ Examples:
   const privacyIndex = args.indexOf('--privacy');
   if (privacyIndex !== -1 && args[privacyIndex + 1]) {
     options.privacyStatus = args[privacyIndex + 1] as 'private' | 'unlisted' | 'public';
+  }
+
+  // Parse made for kids flag
+  if (args.includes('--made-for-kids')) {
+    options.madeForKids = true;
   }
 
   const scheduleIndex = args.indexOf('--schedule');

@@ -3,8 +3,6 @@
 import { MultiUploader } from '../src/index';
 import { loadCredentials } from '../src/config/credentials';
 import { YouTubeUploader } from '../src/services/youtubeUploader';
-import { InstagramUploader } from '../src/services/instagramUploader';
-import { FacebookUploader } from '../src/services/facebookUploader';
 
 /**
  * Example: How to use scheduling features for each platform
@@ -15,8 +13,6 @@ async function schedulingExamples() {
 
     // Initialize uploaders
     const youtubeUploader = new YouTubeUploader(credentials);
-    const instagramUploader = new InstagramUploader(credentials);
-    const facebookUploader = new FacebookUploader(credentials);
 
     // Set schedule time (1 hour from now)
     const scheduledTime = new Date(Date.now() + 60 * 60 * 1000);
@@ -30,7 +26,7 @@ async function schedulingExamples() {
         title: 'My Scheduled Short',
         description: 'This video was uploaded via scheduling!',
         tags: ['shorts', 'scheduled', 'api'],
-        privacyStatus: 'private', // Will be uploaded as private
+        privacyStatus: 'unlisted', // Will be uploaded as unlisted for scheduling
       });
       console.log('YouTube scheduled upload result:', youtubeResult);
 
@@ -40,61 +36,15 @@ async function schedulingExamples() {
       console.error('YouTube scheduling failed:', error);
     }
 
-    // 2. Instagram Scheduling (native API support)
-    console.log('\n📸 Instagram Scheduling Example:');
-    try {
-      const instagramResult = await instagramUploader.scheduleReel(
-        'https://example.com/your-public-video.mp4', // Must be publicly accessible
-        scheduledTime,
-        {
-          caption: 'My scheduled Reel! #scheduled #api #reels',
-          hashtags: ['scheduled', 'api', 'reels'],
-        }
-      );
-      console.log('Instagram scheduled upload result:', instagramResult);
-
-      // You can also check scheduled posts:
-      // const scheduledPosts = await instagramUploader.getScheduledPosts();
-      // console.log('Scheduled posts:', scheduledPosts);
-    } catch (error) {
-      console.error('Instagram scheduling failed:', error);
-    }
-
-    // 3. Facebook Scheduling (native API support)
-    console.log('\n📘 Facebook Scheduling Example:');
-    try {
-      const facebookResult = await facebookUploader.scheduleVideo(
-        'https://example.com/your-public-video.mp4', // Must be publicly accessible
-        scheduledTime,
-        {
-          title: 'My Scheduled Facebook Video',
-          description: 'This video was scheduled via the API!',
-          message: 'Check out this amazing scheduled content!',
-          tags: ['scheduled', 'facebook', 'api'],
-        }
-      );
-      console.log('Facebook scheduled upload result:', facebookResult);
-    } catch (error) {
-      console.error('Facebook scheduling failed:', error);
-    }
-
-    // 4. Managing Scheduled Content
+    // 2. Managing Scheduled Content
     console.log('\n📋 Managing Scheduled Content:');
 
-    // List YouTube private videos (potential scheduled uploads)
+    // List YouTube unlisted videos (potential scheduled uploads)
     try {
       const privateVideos = await youtubeUploader.listPrivateVideos();
-      console.log(`YouTube private videos: ${privateVideos.length}`);
+      console.log(`YouTube unlisted videos: ${privateVideos.length}`);
     } catch (error) {
-      console.error('Failed to list private videos:', error);
-    }
-
-    // List Instagram scheduled posts
-    try {
-      const scheduledPosts = await instagramUploader.getScheduledPosts();
-      console.log(`Instagram scheduled posts: ${scheduledPosts.length}`);
-    } catch (error) {
-      console.error('Failed to list scheduled posts:', error);
+      console.error('Failed to list unlisted videos:', error);
     }
   } catch (error) {
     console.error('❌ Scheduling examples failed:', error);
@@ -131,7 +81,7 @@ function schedulingLimitations() {
 
   console.log('\n📺 YouTube:');
   console.log('  • No native API scheduling support');
-  console.log('  • Videos uploaded as private, manual publishing required');
+  console.log('  • Videos uploaded as unlisted for scheduling, manual publishing required');
   console.log('  • Use YouTube Studio for native scheduling');
   console.log('  • Can use updateVideoPrivacy() to publish programmatically');
 

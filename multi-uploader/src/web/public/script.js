@@ -117,7 +117,7 @@ function formatFileSize(bytes) {
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-function selectVideo(video) {
+async function selectVideo(video) {
   selectedVideo = video;
 
   // Update UI
@@ -144,6 +144,85 @@ function selectVideo(video) {
 
   // Set default title
   document.getElementById('title').value = video.name.replace(/\.[^/.]+$/, '');
+
+  // Load and populate metadata
+  await loadAndPopulateMetadata(video.name);
+}
+
+// Load and populate metadata from JSON file
+async function loadAndPopulateMetadata(filename) {
+  try {
+    console.log(`📝 Loading metadata for ${filename}...`);
+
+    const response = await fetch(`/api/videos/${encodeURIComponent(filename)}/metadata`);
+    if (!response.ok) {
+      console.log('No metadata found or error loading metadata');
+      return;
+    }
+
+    const metadata = await response.json();
+    console.log('📝 Metadata loaded:', metadata);
+
+    // Populate title (prefer extracted title, fallback to custom title, then filename)
+    const titleInput = document.getElementById('title');
+    if (metadata.extracted_title && metadata.extracted_title.trim()) {
+      titleInput.value = metadata.extracted_title.trim();
+    } else if (metadata.title && metadata.title.trim()) {
+      titleInput.value = metadata.title.trim();
+    } else {
+      // Keep the filename-based title that was already set
+    }
+
+    // Populate description (prefer extracted description, fallback to custom description)
+    const descriptionInput = document.getElementById('description');
+    if (metadata.extracted_description && metadata.extracted_description.trim()) {
+      descriptionInput.value = metadata.extracted_description.trim();
+    } else if (metadata.description && metadata.description.trim()) {
+      descriptionInput.value = metadata.description.trim();
+    }
+
+    // Populate hashtags/tags
+    const hashtagsInput = document.getElementById('hashtags');
+    const tags = [];
+
+    // Add extracted tags from metadata
+    if (metadata.tags && Array.isArray(metadata.tags)) {
+      tags.push(...metadata.tags);
+    }
+
+    // Add source URL as a tag if available
+    if (metadata.source_url) {
+      tags.push('instagram');
+      tags.push('reel');
+    }
+
+    if (tags.length > 0) {
+      hashtagsInput.value = tags.join(', ');
+    }
+
+    // Show metadata source info
+    const selectedVideoDiv = document.getElementById('selectedVideo');
+    const metadataInfo = document.createElement('div');
+    metadataInfo.className = 'metadata-info';
+    metadataInfo.innerHTML = `
+      <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px; border-left: 4px solid #4CAF50;">
+        <strong>📝 Metadata Auto-filled:</strong>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+          ${metadata.extracted_title ? '<li>Title from Instagram</li>' : ''}
+          ${metadata.extracted_description ? '<li>Description from Instagram</li>' : ''}
+          ${tags.length > 0 ? '<li>Tags/Hashtags</li>' : ''}
+          ${
+            metadata.source_url
+              ? `<li>Source: <a href="${metadata.source_url}" target="_blank">Instagram Reel</a></li>`
+              : ''
+          }
+        </ul>
+      </div>
+    `;
+    selectedVideoDiv.appendChild(metadataInfo);
+  } catch (error) {
+    console.error('❌ Error loading metadata:', error);
+  }
 }
 
 async function deleteVideo(filename) {
@@ -312,6 +391,7 @@ async function handleFormSubmit(e) {
     description: formData.get('description'),
     hashtags: formData.get('hashtags'),
     youtubeAccount: formData.get('youtubeAccount') || 'A', // Default to A if not specified
+    madeForKids: formData.get('madeForKids') === 'on', // Convert checkbox to boolean
     schedules: {
       youtube: formData.get('youtubeSchedule') || null,
     },
@@ -395,7 +475,7 @@ function showResults(results) {
 }
 
 // Preview functionality
-function previewUpload() {
+async function previewUpload() {
   if (!selectedVideo) {
     alert('Please select a video first');
     return;
@@ -409,16 +489,29 @@ function previewUpload() {
     return;
   }
 
+  // Load metadata for preview
+  let metadata = {};
+  try {
+    const response = await fetch(`/api/videos/${encodeURIComponent(selectedVideo.name)}/metadata`);
+    if (response.ok) {
+      metadata = await response.json();
+    }
+  } catch (error) {
+    console.error('Error loading metadata for preview:', error);
+  }
+
   const previewData = {
     video: selectedVideo,
     title: formData.get('title') || 'Untitled',
     description: formData.get('description') || 'No description',
     hashtags: formData.get('hashtags') || 'No hashtags',
+    madeForKids: formData.get('madeForKids') === 'on',
     platforms: platforms,
     youtubeAccount: formData.get('youtubeAccount') || 'A',
     schedules: {
       youtube: formData.get('youtubeSchedule'),
     },
+    metadata: metadata, // Include metadata for preview
   };
 
   showPreviewModal(previewData);
@@ -428,6 +521,38 @@ function showPreviewModal(data) {
   const modal = document.getElementById('previewModal');
   const previewContent = document.getElementById('previewContent');
 
+  // Check if metadata was auto-filled
+  const hasMetadata = data.metadata && Object.keys(data.metadata).length > 0;
+  const metadataInfo = hasMetadata
+    ? `
+    <div style="margin-bottom: 20px;">
+        <h4>📝 Metadata Source</h4>
+        <div style="background: #f0f8ff; padding: 10px; border-radius: 5px; border-left: 4px solid #4CAF50;">
+            <p><strong>Source:</strong> ${
+              data.metadata.source_url
+                ? `<a href="${data.metadata.source_url}" target="_blank">Instagram Reel</a>`
+                : 'Local metadata'
+            }</p>
+            ${
+              data.metadata.extracted_title
+                ? `<p><strong>Original Title:</strong> ${data.metadata.extracted_title}</p>`
+                : ''
+            }
+            ${
+              data.metadata.extracted_description
+                ? `<p><strong>Original Description:</strong> ${data.metadata.extracted_description}</p>`
+                : ''
+            }
+            ${
+              data.metadata.tags && data.metadata.tags.length > 0
+                ? `<p><strong>Original Tags:</strong> ${data.metadata.tags.join(', ')}</p>`
+                : ''
+            }
+        </div>
+    </div>
+  `
+    : '';
+
   previewContent.innerHTML = `
         <div style="margin-bottom: 20px;">
             <h4>🎬 Video</h4>
@@ -435,11 +560,14 @@ function showPreviewModal(data) {
             <p><strong>Size:</strong> ${formatFileSize(data.video.size)}</p>
         </div>
         
+        ${metadataInfo}
+        
         <div style="margin-bottom: 20px;">
             <h4>📝 Content</h4>
             <p><strong>Title:</strong> ${data.title}</p>
             <p><strong>Description:</strong> ${data.description}</p>
             <p><strong>Hashtags:</strong> ${data.hashtags}</p>
+            <p><strong>Made for Kids:</strong> ${data.madeForKids ? '✅ Yes' : '❌ No'}</p>
         </div>
         
         <div style="margin-bottom: 20px;">

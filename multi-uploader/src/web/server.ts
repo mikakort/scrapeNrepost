@@ -87,6 +87,45 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
+// Get metadata for a specific video
+app.get('/api/videos/:filename/metadata', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const videoPath = path.join(process.cwd(), 'videos', filename);
+
+    // Security check - ensure file is in videos directory
+    const videosDir = path.resolve(process.cwd(), 'videos');
+    const resolvedVideoPath = path.resolve(videoPath);
+
+    if (!resolvedVideoPath.startsWith(videosDir)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check if video file exists
+    if (!(await fs.pathExists(videoPath))) {
+      return res.status(404).json({ error: 'Video file not found' });
+    }
+
+    // Look for corresponding metadata file
+    const videoName = path.basename(filename, path.extname(filename));
+    const metadataPath = path.join(process.cwd(), 'videos', `${videoName}_metadata.json`);
+
+    if (await fs.pathExists(metadataPath)) {
+      const metadata = await fs.readJson(metadataPath);
+      console.log(`📝 Found metadata for ${filename}:`, metadata);
+      res.json(metadata);
+    } else {
+      console.log(`📝 No metadata found for ${filename}`);
+      res.json({});
+    }
+  } catch (error) {
+    console.error('❌ Error loading metadata:', error);
+    res.status(500).json({
+      error: 'Failed to load metadata: ' + (error instanceof Error ? error.message : 'Unknown error'),
+    });
+  }
+});
+
 // Upload new video file
 app.post('/api/upload', upload.single('video'), (req, res) => {
   try {
@@ -121,6 +160,7 @@ app.post('/api/schedule', async (req, res) => {
       title,
       description,
       hashtags,
+      madeForKids, // Flag content as "Made for Kids"
       schedules, // { youtube: '2024-01-15T10:30:00', instagram: '2024-01-15T11:00:00', etc. }
       youtubeAccount, // Selected YouTube account (A, B, C, D, E, F)
     } = req.body;
@@ -142,6 +182,7 @@ app.post('/api/schedule', async (req, res) => {
           title: title || 'Uploaded via Multi-Uploader',
           description: description || 'Check out this amazing content!',
           tags: hashtags ? hashtags.split(/[,\s#]+/).filter((tag: string) => tag.length > 0) : [],
+          madeForKids: madeForKids || false,
         };
 
         switch (platform) {
