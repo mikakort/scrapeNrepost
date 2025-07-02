@@ -57,7 +57,9 @@ export function validateCredentials(credentials: Credentials): void {
 }
 
 export function getAvailableYouTubeAccounts(): string[] {
-  return ['A', 'B', 'C', 'D', 'E', 'F'].filter((account) => process.env[`YOUTUBE_REFRESH_TOKEN_${account}`]);
+  // Support up to 11 accounts: A-K
+  const slots = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+  return slots.filter((account) => process.env[`YOUTUBE_REFRESH_TOKEN_${account}`]);
 }
 
 export function getYouTubeCredentialsForAccount(account: string): {

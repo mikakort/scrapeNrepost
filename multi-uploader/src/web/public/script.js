@@ -4,6 +4,21 @@ let platformStatus = {
   youtube: false,
 };
 
+// Add this mapping near the top of the file
+const accountNames = {
+  A: 'aigymanimal',
+  B: 'aisickedits',
+  C: 'aianimalpovvlogs',
+  D: 'MK Prod',
+  E: 'aibabybabybaby',
+  F: 'aistreetglitch',
+  G: 'aiasmrdailydoseof',
+  H: 'aitop5compilations',
+  I: 'aifailsdailydose',
+  J: 'aibaddiebaddie',
+  K: 'aisyntheticstandup',
+};
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function () {
   initializeApp();
@@ -49,7 +64,8 @@ function populateYouTubeAccounts(accounts) {
   accounts.forEach((account) => {
     const option = document.createElement('option');
     option.value = account;
-    option.textContent = `Account ${account}`;
+    // Use the friendly name if available, otherwise fallback to "Account X"
+    option.textContent = accountNames[account] ? `${accountNames[account]} (${account})` : `Account ${account}`;
     select.appendChild(option);
   });
 
@@ -163,20 +179,38 @@ async function loadAndPopulateMetadata(filename) {
     const metadata = await response.json();
     console.log('📝 Metadata loaded:', metadata);
 
-    // Populate title (prefer extracted title, fallback to custom title, then filename)
+    // Populate title - extract from quotes in extracted_title
     const titleInput = document.getElementById('title');
     if (metadata.extracted_title && metadata.extracted_title.trim()) {
-      titleInput.value = metadata.extracted_title.trim();
+      // Extract title from between quotes in extracted_title
+      const titleMatch = metadata.extracted_title.match(/"([^"]+)"/);
+      if (titleMatch && titleMatch[1]) {
+        // Remove hashtags from the end of the title if present
+        const cleanTitle = titleMatch[1].replace(/\n#.*$/, '').trim();
+        titleInput.value = cleanTitle;
+      } else {
+        // Fallback to the full extracted_title if no quotes found
+        titleInput.value = metadata.extracted_title.trim();
+      }
     } else if (metadata.title && metadata.title.trim()) {
       titleInput.value = metadata.title.trim();
     } else {
       // Keep the filename-based title that was already set
     }
 
-    // Populate description (prefer extracted description, fallback to custom description)
+    // Populate description - extract from quotes in extracted_description
     const descriptionInput = document.getElementById('description');
     if (metadata.extracted_description && metadata.extracted_description.trim()) {
-      descriptionInput.value = metadata.extracted_description.trim();
+      // Extract description from between quotes in extracted_description
+      const descMatch = metadata.extracted_description.match(/"([^"]+)"/);
+      if (descMatch && descMatch[1]) {
+        // Remove hashtags from the end of the description if present
+        const cleanDescription = descMatch[1].replace(/\n#.*$/, '').trim();
+        descriptionInput.value = cleanDescription;
+      } else {
+        // Fallback to the full extracted_description if no quotes found
+        descriptionInput.value = metadata.extracted_description.trim();
+      }
     } else if (metadata.description && metadata.description.trim()) {
       descriptionInput.value = metadata.description.trim();
     }
@@ -185,15 +219,18 @@ async function loadAndPopulateMetadata(filename) {
     const hashtagsInput = document.getElementById('hashtags');
     const tags = [];
 
+    // Extract hashtags from extracted_description (after \n)
+    if (metadata.extracted_description) {
+      const hashtagMatch = metadata.extracted_description.match(/\n(#[\w]+(?:\s+#[\w]+)*)/);
+      if (hashtagMatch && hashtagMatch[1]) {
+        const hashtags = hashtagMatch[1].split(/\s+/).filter((tag) => tag.startsWith('#'));
+        tags.push(...hashtags);
+      }
+    }
+
     // Add extracted tags from metadata
     if (metadata.tags && Array.isArray(metadata.tags)) {
       tags.push(...metadata.tags);
-    }
-
-    // Add source URL as a tag if available
-    if (metadata.source_url) {
-      tags.push('instagram');
-      tags.push('reel');
     }
 
     if (tags.length > 0) {

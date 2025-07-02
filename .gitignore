@@ -24,6 +24,7 @@ build/
 
 # OS generated files
 .DS_Store
+/multi-uploader/.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
