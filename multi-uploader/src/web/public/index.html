@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-Platform Video Uploader</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🎥 Multi-Platform Video Uploader</h1>
+        <div class="status-bar" id="statusBar">
+          <div class="platform-status" id="youtubeStatus">
+            <span class="platform-icon">📺</span>
+            <span class="platform-name">YouTube</span>
+            <span class="status-indicator" data-platform="youtube">⏳</span>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <!-- File Upload Section -->
+        <section class="upload-section">
+          <h2>📁 Upload or Select Video</h2>
+
+          <div class="upload-area" id="uploadArea">
+            <div class="upload-drop-zone" id="dropZone">
+              <div class="upload-content">
+                <div class="upload-icon">📤</div>
+                <p>Drag & drop your video here</p>
+                <p class="upload-subtitle">or</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                  Choose File
+                </button>
+                <input type="file" id="fileInput" accept="video/*" style="display: none" />
+                <p class="upload-info">Supported formats: MP4, MOV, AVI, MKV, WebM (Max: 256MB)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-bar" id="progressBar" style="display: none">
+            <div class="progress-fill" id="progressFill"></div>
+            <span class="progress-text" id="progressText">Uploading...</span>
+          </div>
+        </section>
+
+        <!-- Video Selection Section -->
+        <section class="video-selection">
+          <h2>📹 Available Videos</h2>
+          <div class="video-list" id="videoList">
+            <div class="loading">Loading videos...</div>
+          </div>
+        </section>
+
+        <!-- Upload Configuration Section -->
+        <section class="config-section" id="configSection" style="display: none">
+          <h2>⚙️ Upload Configuration</h2>
+
+          <div class="selected-video" id="selectedVideo">
+            <!-- Selected video info will be displayed here -->
+          </div>
+
+          <form id="uploadForm">
+            <div class="form-group">
+              <label for="title">📝 Title</label>
+              <input type="text" id="title" name="title" placeholder="Enter video title" maxlength="100" />
+            </div>
+
+            <div class="form-group">
+              <label for="description">📄 Description</label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder="Enter video description..."
+                rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="hashtags">🏷️ Hashtags</label>
+              <input
+                type="text"
+                id="hashtags"
+                name="hashtags"
+                placeholder="shorts, viral, content, amazing (comma or space separated)" />
+              <small>Enter hashtags separated by commas or spaces</small>
+            </div>
+
+            <div class="platforms-section">
+              <h3>📱 Platform Settings</h3>
+
+              <div class="platform-config">
+                <div class="platform-header">
+                  <label class="platform-checkbox">
+                    <input type="checkbox" name="platforms" value="youtube" checked />
+                    <span class="checkmark"></span>
+                    📺 YouTube Shorts
+                  </label>
+                </div>
+                <div class="platform-options">
+                  <div class="form-group">
+                    <label for="youtubeAccount">👤 YouTube Account</label>
+                    <select id="youtubeAccount" name="youtubeAccount">
+                      <option value="A">Account A</option>
+                    </select>
+                    <small>Select which YouTube account to upload to</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="youtubeSchedule">⏰ Schedule (optional)</label>
+                    <input type="datetime-local" id="youtubeSchedule" name="youtubeSchedule" />
+                    <small>Leave empty for immediate upload</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button type="button" class="btn btn-secondary" onclick="previewUpload()">👁️ Preview</button>
+              <button type="submit" class="btn btn-primary">🚀 Upload</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection" style="display: none">
+          <h2>📊 Upload Results</h2>
+          <div class="results-content" id="resultsContent">
+            <!-- Results will be displayed here -->
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal for preview -->
+    <div class="modal" id="previewModal" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>👁️ Upload Preview</h3>
+          <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="previewContent">
+          <!-- Preview content will be displayed here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="confirmUpload()">Confirm Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

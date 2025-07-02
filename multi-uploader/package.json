@@ -1,0 +1,45 @@
+{
+  "name": "multi-uploader",
+  "version": "1.0.0",
+  "description": "Upload short-form videos to YouTube, Instagram, and Facebook",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "upload": "npm run build && npm start",
+    "web": "ts-node src/web/server.ts",
+    "web:build": "tsc && npm run web:static",
+    "web:static": "cp -r src/web/public dist/web/"
+  },
+  "keywords": [
+    "video",
+    "upload",
+    "youtube",
+    "instagram",
+    "facebook",
+    "shorts",
+    "reels"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^128.0.0",
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.1.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/fs-extra": "^11.0.1",
+    "@types/express": "^4.17.17",
+    "@types/multer": "^1.4.7",
+    "@types/cors": "^2.8.13",
+    "typescript": "^5.2.0",
+    "ts-node": "^10.9.0"
+  }
+}
