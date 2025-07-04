@@ -186,11 +186,12 @@ async function loadAndPopulateMetadata(filename) {
       const titleMatch = metadata.extracted_title.match(/"([^"]+)"/);
       if (titleMatch && titleMatch[1]) {
         // Remove hashtags from the end of the title if present
-        const cleanTitle = titleMatch[1].replace(/\n#.*$/, '').trim();
+        const cleanTitle = titleMatch[1].replace(/\s+#[\w]+(?:\s+#[\w]+)*$/, '').trim();
         titleInput.value = cleanTitle;
       } else {
-        // Fallback to the full extracted_title if no quotes found
-        titleInput.value = metadata.extracted_title.trim();
+        // If no quotes found, use the extracted_title but clean it up
+        const cleanTitle = metadata.extracted_title.replace(/ on Instagram$/, '').trim();
+        titleInput.value = cleanTitle;
       }
     } else if (metadata.title && metadata.title.trim()) {
       titleInput.value = metadata.title.trim();
@@ -205,11 +206,20 @@ async function loadAndPopulateMetadata(filename) {
       const descMatch = metadata.extracted_description.match(/"([^"]+)"/);
       if (descMatch && descMatch[1]) {
         // Remove hashtags from the end of the description if present
-        const cleanDescription = descMatch[1].replace(/\n#.*$/, '').trim();
+        const cleanDescription = descMatch[1].replace(/\s+#[\w]+(?:\s+#[\w]+)*$/, '').trim();
         descriptionInput.value = cleanDescription;
       } else {
-        // Fallback to the full extracted_description if no quotes found
-        descriptionInput.value = metadata.extracted_description.trim();
+        // If no quotes found, don't use the engagement metrics as description
+        // Check if there's actual content after the engagement info
+        const engagementPattern = /^\d+[KMB]? likes?, \d+[KMB]? comments? - [^:]+ on [^:]+: "([^"]+)"/;
+        const contentMatch = metadata.extracted_description.match(engagementPattern);
+        if (contentMatch && contentMatch[1]) {
+          const cleanDescription = contentMatch[1].replace(/\s+#[\w]+(?:\s+#[\w]+)*$/, '').trim();
+          descriptionInput.value = cleanDescription;
+        } else {
+          // No actual content found, leave description empty
+          descriptionInput.value = '';
+        }
       }
     } else if (metadata.description && metadata.description.trim()) {
       descriptionInput.value = metadata.description.trim();
@@ -228,14 +238,25 @@ async function loadAndPopulateMetadata(filename) {
       }
     }
 
+    // Also extract hashtags from the quoted content in extracted_description
+    if (metadata.extracted_description) {
+      const descMatch = metadata.extracted_description.match(/"([^"]+)"/);
+      if (descMatch && descMatch[1]) {
+        const hashtagMatch = descMatch[1].match(/\s+(#[\w]+(?:\s+#[\w]+)*)$/);
+        if (hashtagMatch && hashtagMatch[1]) {
+          const hashtags = hashtagMatch[1].split(/\s+/).filter((tag) => tag.startsWith('#'));
+          tags.push(...hashtags);
+        }
+      }
+    }
+
     // Add extracted tags from metadata
     if (metadata.tags && Array.isArray(metadata.tags)) {
       tags.push(...metadata.tags);
     }
 
-    if (tags.length > 0) {
-      hashtagsInput.value = tags.join(', ');
-    }
+    // Always set the hashtags input, even if empty (to clear previous values)
+    hashtagsInput.value = tags.join(', ');
 
     // Show metadata source info
     const selectedVideoDiv = document.getElementById('selectedVideo');
