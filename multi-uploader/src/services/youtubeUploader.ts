@@ -66,7 +66,7 @@ export class YouTubeUploader {
       const youtubeApi = options.account ? this.initializeYouTubeAPI(options.account) : this.youtube;
 
       // Create the video resource
-      const videoResource = {
+      const videoResource: any = {
         snippet: {
           title: uploadParams.title,
           description: uploadParams.description,
@@ -78,6 +78,12 @@ export class YouTubeUploader {
           madeForKids: uploadParams.madeForKids,
         },
       };
+
+      // Add scheduled publish time if provided
+      if (options.scheduledPublishTime) {
+        videoResource.status.publishAt = options.scheduledPublishTime.toISOString();
+        console.log(`📅 Scheduling video for: ${options.scheduledPublishTime.toISOString()}`);
+      }
 
       // Upload the video
       const response = await youtubeApi.videos.insert({
@@ -94,6 +100,9 @@ export class YouTubeUploader {
       console.log(`✅ YouTube upload successful!`);
       console.log(`Video ID: ${videoId}`);
       console.log(`URL: ${videoUrl}`);
+      if (options.scheduledPublishTime) {
+        console.log(`📅 Video will be published at: ${options.scheduledPublishTime.toISOString()}`);
+      }
 
       return {
         videoId,
@@ -202,9 +211,8 @@ export class YouTubeUploader {
   }
 
   /**
-   * Schedule a video upload (uploads as unlisted, then schedules publication)
-   * Note: YouTube API doesn't support native scheduling, so this uploads as unlisted
-   * and you'll need to use external scheduling to publish later
+   * Schedule a video upload using YouTube's native scheduling
+   * Note: YouTube API supports native scheduling with privacyStatus: 'private' and scheduledPublishTime
    */
   async scheduleVideo(
     videoPath: string,
@@ -217,19 +225,19 @@ export class YouTubeUploader {
         console.log(`Using YouTube account: ${options.account}`);
       }
 
-      // Upload as unlisted first for scheduling
+      // Use native YouTube scheduling
       const uploadOptions = {
         ...options,
-        privacyStatus: 'unlisted' as const,
+        privacyStatus: 'private' as const, // Must be private for scheduling
+        scheduledPublishTime: scheduledPublishTime,
       };
 
       const uploadResult = await this.uploadVideo(videoPath, uploadOptions);
 
-      console.log(`✅ Video uploaded as unlisted for scheduling`);
+      console.log(`✅ Video scheduled successfully using YouTube's native scheduler`);
       console.log(`Video ID: ${uploadResult.videoId}`);
       console.log(`Scheduled to publish: ${scheduledPublishTime.toISOString()}`);
-      console.log(`⚠️  Note: You'll need to manually publish this video at the scheduled time`);
-      console.log(`   or use YouTube Studio's built-in scheduler.`);
+      console.log(`📅 YouTube will automatically publish this video at the scheduled time`);
 
       return {
         ...uploadResult,

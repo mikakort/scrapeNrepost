@@ -80,10 +80,11 @@ function schedulingLimitations() {
   console.log('\n⚠️  Platform Scheduling Limitations:');
 
   console.log('\n📺 YouTube:');
-  console.log('  • No native API scheduling support');
-  console.log('  • Videos uploaded as unlisted for scheduling, manual publishing required');
-  console.log('  • Use YouTube Studio for native scheduling');
-  console.log('  • Can use updateVideoPrivacy() to publish programmatically');
+  console.log('  • Native API scheduling support ✅');
+  console.log('  • Requires privacyStatus: "private" and scheduledPublishTime');
+  console.log('  • Videos uploaded as private, automatically published at scheduled time');
+  console.log('  • Can schedule up to 6 months in advance');
+  console.log('  • Use updateVideoPrivacy() to change privacy after upload if needed');
 
   console.log('\n📸 Instagram:');
   console.log('  • Native scheduling support ✅');
